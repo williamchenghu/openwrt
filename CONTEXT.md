@@ -30,3 +30,17 @@ client link together, with one DHCP client on it.
 The one-time provisioning of a network-agnostic image over its wired port via
 LuCI — set the root password and configure the Wi-Fi client — after which the
 device joins the upstream network.
+
+**Breed**:
+The device's bootloader, a replacement for stock U-Boot (hackpascal's
+"Boot and Recovery Environment", aka 刷不死). It lives at flash offset
+0x0–0x20000, exposes a web recovery console at 192.168.1.1 (entered by holding
+the reset button on power-on, or automatically when firmware fails to boot),
+and never writes the firmware or ART partitions unless asked to.
+_Avoid_: U-Boot, bootloader partition (when the specific loader is meant)
+
+**ART**:
+The 64 KB flash partition at 0x7f0000–0x800000 holding the unit's unique WiFi
+radio calibration (read by the device tree at ART+0x1000, 0x440 bytes).
+Per-unit data: never baked into the image, backed up per device.
+_Avoid_: calibration data, eeprom blob
