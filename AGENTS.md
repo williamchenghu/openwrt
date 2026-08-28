@@ -33,6 +33,15 @@ apply to every agent session and human edit.
   the ticket is **not closed**, it is *pending merge*.
 - Never narrate a ticket as closed, completed, or resolved while its PR is
   open.
+- **Close it automatically, never by hand.** In the PR that captures a
+  ticket's change, write the closing keyword `Closes #<n>` (GitHub also
+  accepts `Fixes`/`Resolves`) in the PR **body** so that GitHub auto-closes
+  the issue the moment the PR merges. Do not also run `gh issue close` —
+  that's the manual step this convention forbids; the merge's auto-close is
+  the only close.
+- To make the pending state visible while the PR is open, tag the ticket
+  `wayfinder:pending-merge`. It stops being pending (label removed) only after
+  the PR merges and auto-closes it.
 
 ### Commit-and-push every completed request
 
