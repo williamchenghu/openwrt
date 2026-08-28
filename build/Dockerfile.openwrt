@@ -1,0 +1,65 @@
+# OpenWrt build container for the WR703N print-gateway image.
+#
+# Built natively on whatever host it runs on (arm64 on Apple Silicon Macs,
+# amd64 on Intel) — OpenWrt cross-compiles to the mips_24kc target from any
+# Linux host arch, and native (no Rosetta emulation) is fastest on Apple
+# Silicon.
+#
+# Deliberately does NOT bake in the source tree or .config: those are synced
+# in from the host repo by build.sh so host edits always flow into the build
+# and the image needs no rebuild when you change config/source.
+
+FROM ubuntu:22.04
+
+# Prevents apt tzdata / debconf prompts on install.
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Minimal, non-interactive base packages + OpenWrt build prerequisites
+# (official list for Debian/Ubuntu; see OpenWrt docs "Build system setup").
+# gcc-multilib / g++-multilib exist only on amd64; they are NOT needed to
+# cross-compile the mips_24kc target on arm64 (Apple Silicon native). Install
+# them on amd64 only, so the same Dockerfile builds on either host arch.
+RUN set -eux; \
+    ARCH="$(dpkg --print-architecture)"; \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+        build-essential \
+        clang \
+        flex \
+        bison \
+        gettext \
+        git \
+        libncurses5-dev \
+        libncursesw5-dev \
+        libssl-dev \
+        libelf-dev \
+        python3 \
+        python3-pip \
+        python3-setuptools \
+        python3-venv \
+        rsync \
+        subversion \
+        swig \
+        unzip \
+        uuid-runtime \
+        wget \
+        curl \
+        file \
+        gawk \
+        zlib1g-dev \
+        ca-certificates \
+        vim-tiny; \
+    if [ "$ARCH" = "amd64" ]; then \
+        apt-get install -y --no-install-recommends gcc-multilib g++-multilib; \
+    fi; \
+    rm -rf /var/lib/apt/lists/*
+
+# OpenWrt normally refuses to build as root; FORCE_UNSAFE_CONFIGURE=1 lifts the
+# guard, which is the standard way to build inside a Docker image (and avoids a
+# whole class of named-volume ownership bugs). Volume /sdk is owned by root.
+WORKDIR /sdk
+
+ENV FORCE_UNSAFE_CONFIGURE=1 \
+    DEBIAN_FRONTEND=noninteractive
+
+CMD ["bash"]
