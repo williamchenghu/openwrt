@@ -160,6 +160,16 @@ make menuconfig                 # apply §3.1, then save + exit
 `diffconfig` (a `CONFIG_*` delta vs. defaults) is the reproducible artifact:
 apply it later with `cp diffconfig .config && make defconfig`.
 
+> **Why the `diffconfig` is not committed with the source edits.** The feed
+> symbols it contains (`CONFIG_PACKAGE_p910nd`,
+> `CONFIG_PACKAGE_luci-app-p910nd`, …) resolve only after `./scripts/feeds
+> update -a && install -a` checks out the `packages`/`luci` feeds on the build
+> host; they are not vendored in the source tree. A hand-authored `diffconfig`
+> therefore cannot be validated in-repo and is risk of breaking the build. Keep
+> the committed tree to {ticket #2's source edits (§2) + this spec}; generate
+> the `diffconfig` on the Linux build host exactly as below. The package set in
+> §3.1 is the authoritative spec for the interaction step.
+
 ---
 
 ## 4. Image size budget
