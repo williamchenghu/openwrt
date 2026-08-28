@@ -80,6 +80,7 @@ sync_source() {
       --exclude "/package/feeds" \
       --exclude "/bin" \
       --exclude "/.config" \
+      --exclude ".DS_Store" \
       '"$REPO_SRC"'/ /sdk/openwrt/
   '
 }
