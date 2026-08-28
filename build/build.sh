@@ -65,13 +65,17 @@ sync_source() {
   # build_dir/staging_dir/dl/tmp, previous bin/ artifacts, and the volume's
   # .config) — none of these exist on the host, so --delete must never touch
   # them or incremental builds and feed symbols silently break.
+  #
+  # NOTE: .git MUST be synced. scripts/getver.sh derives the base-files version
+  # from git metadata; without it the version becomes "~unknown" which apk
+  # rejects ("package version is invalid") and the build dies at base-files.
   run_in_ctr '
     mkdir -p /sdk/openwrt
     # Leading slash anchors each exclude to the tree root. UNANCHORED patterns
     # would match at any depth and nuke same-named files deeper in the tree
     # (e.g. excluding "feeds" also deleted the scripts/feeds executable).
     rsync -a --delete \
-      --exclude "/.git" \
+      --exclude "/build_dir" \
       --exclude "/build_dir" \
       --exclude "/staging_dir" \
       --exclude "/dl" \
