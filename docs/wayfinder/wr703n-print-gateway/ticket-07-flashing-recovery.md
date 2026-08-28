@@ -67,16 +67,19 @@ console; every path preserves the Breed partition and the ART partition.**
 
 | Path | Content | MD5 |
 |---|---|---|
-| `backup/wr703n/20260828_full/wr703n_backup_full_MAC_4490.bin` | whole 8 MB flash (Breed + current 19.07 + ART) | `bd1974024f9140a22e0f7e681613ed09` |
-| `backup/wr703n/art/wr703n_backup_art_MAC_4490.bin` | 64 KB ART dump (cal at +0x1000) | `6fcdcefee9e213b7fad2f3456d8343f7` |
-| `backup/wr703n/art/wr703n_backup_art_MAC_11AD.bin` | byte-identical copy of the above | `6fcdcefee9e213b7fad2f3456d8343f7` |
+| `backup/wr703n/20260828_full/wr703n_backup_full_MAC_4490.bin` | whole 8 MB flash, unit 1 (LAN MAC `38:83:45:3F:44:90`) | `bd1974024f9140a22e0f7e681613ed09` |
+| `backup/wr703n/20260828_full/wr703n_backup_full_MAC_11AD.bin` | whole 8 MB flash, unit 2 (LAN MAC `00:5A:39:B5:11:AD`) | `56682812081fbb9423642d425c3306b8` |
+| `backup/wr703n/art/wr703n_backup_art_MAC_4490.bin` | 64 KB ART dump, unit 1 (cal at +0x1000) | `6fcdcefee9e213b7fad2f3456d8343f7` |
+| `backup/wr703n/art/wr703n_backup_art_MAC_11AD.bin` | 64 KB ART dump, unit 2 (cal at +0x1000) | `6fcdcefee9e213b7fad2f3456d8343f7` |
 | `backup/wr703n/bootloader/breed-ar9331.bin` | Breed binary (single canonical copy) | `13323271ead321322b12ea319c72ad53` |
 
-> ⚠️ Note: the two ART files are **identical** (same MD5). The MAC suffix on
-> the 11AD copy does not correspond to any MAC found in the ART data or the
-> full dump (the unit's LAN MAC ends in `44:90`); if 11AD was meant to label a
-> *second* unit's ART, that copy is actually this unit's dump and must be
-> replaced with the real one before being trusted.
+> ⚠️ Note: both units' ART regions are **byte-identical** (same MD5). Each
+> full dump's 0x7f0000–0x800000 region matches its own labeled ART dump, so
+> the labels are correct (unit 2's LAN MAC `00:5A:39:B5:11:AD` confirmed from
+> its full dump at 0x1fc00). The identical content means unit 2 is running
+> unit 1's calibration (likely cloned during the flash mod) — the WiFi works,
+> but if unit 2's own factory calibration is ever recovered, replace its ART
+> dump and re-flash it.
 
 ### 2. Flashing procedure
 
