@@ -96,7 +96,14 @@
      requirement.
    - **LPRng / lpd** — spooling daemon, larger, no benefit over p910nd for raw
      pass-through.
-   - **`luci-app-p910nd`** — web UI for p910nd; out of scope (no LuCI).
+   - **`luci-app-p910nd`** — a LuCI web UI for p910nd. **Scope note:** this
+     finding originally ruled it out because the map then excluded LuCI. The
+     map owner's later scope amendment (Aug 2026) brings the **full LuCI admin
+     UI in scope** (`luci` + `luci-theme-bootstrap`, ~0.5 MB installed) with
+     `luci-app-p910nd` **optional** — the 8 mlzma layout's relaxed headroom
+     makes room for it. So it is no longer ruled out: include it in the build
+     if the UI is wanted; it is a small config wrapper over p910nd, not part of
+     the print-data path (which remains kmod-usb-printer + p910nd).
 
 ## Evidence
 
@@ -179,7 +186,9 @@
 - **Build spec (the map's destination):** add `kmod-usb-printer` and `p910nd`
   to `DEVICE_PACKAGES` for `tplink_tl-wr703n`; ship `/etc/config/p910nd` with
   `enabled 1`, `bidirectional 1`, `device /dev/usb/lp0` (mDNS optional, default
-  off). Budget ≈ 20 KB installed.
+  off). Budget ≈ 20 KB installed. **Add the LuCI admin UI per the scope
+  amendment:** `luci` + `luci-theme-bootstrap` (~0.5 MB installed) and
+  optionally `luci-app-p910nd`; the 8 mlzma layout's headroom covers this.
 
 ## Files touched / to touch for the build
 
