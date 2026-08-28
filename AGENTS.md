@@ -41,6 +41,18 @@ apply to every agent session and human edit.
 - The most recent requested change must be captured in its PR. If work is left
   only in the working tree, that request is not done.
 
+### Wayfinder: every closed ticket gets an overview comment on the map
+
+- When a wayfinder ticket (a child of the `wayfinder:map` issue) is resolved
+  and closed, post a **"✅ Ticket closed: <title> (#N)"** overview comment
+  **on the map issue itself** — answer, downstream effect, fog graduated, and
+  asset links — in the style already used there. This is in addition to the
+  ticket's own resolution comment and the map body's Decisions-so-far entry.
+- The map's overview comments are the effort's running changelog; a closed
+  ticket without one is incomplete. Before closing a wayfinder ticket, check
+  the map's comment history and **backfill any earlier closed ticket that is
+  missing its overview comment** in the same pass.
+
 ## Conventions
 - Formatting/linting:
 - Patterns to follow:
