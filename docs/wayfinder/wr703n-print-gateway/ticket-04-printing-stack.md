@@ -4,6 +4,41 @@
 > Ticket: **Choose the smallest viable printing stack for DCP-1510** (issue #4, `wayfinder:research`)
 > Status: resolved — see the ticket's resolution comment for the canonical decision record.
 
+## Final verdict (re-audit, post-#5: AirPrint dropped)
+
+> This is the final verdict. The original research below it explains the stack;
+> the map owner's LuCI scope amendment is folded into section 7. Read this
+> section first.
+
+Re-audited after **Determine feasible iPhone AirPrint support** (issue #5)
+resolved confirming **AirPrint is ruled out** (needs on-router rasterization −
+CUPS + ghostscript + brlaser + avahi/dbus − none packaged for `mips_24kc`, >100 MB
+external storage, exceeds 64 MB RAM/8 MB flash).
+
+**The stack decision below is unchanged and was never dependent on the AirPrint
+question.** It rests on the DCP-1510 being host-based (GDI): the client driver
+emits the whole PDL, so the router is a dumb pipe (usblp + p910nd raw 9100,
+bidirectional). Dropping AirPrint removes the *only* reason this map ever
+favored keeping the router-side footprint minimal (headroom for a future
+rasterizer) — that reason is gone.
+
+**Feasibility of a full (non-lean) build: yes, fits in 8 MB with margin.**
+The 8 mlzma layout (ticket #2) exposes a ~8000 KB firmware region
+(0x20000–0x7f0000). The full in-scope set − kernel + base + SSH + WiFi client
+(wpad-basic-mbedtls) + kmod-usb-chipidea2 (USB host) + kmod-usb-printer +
+p910nd (~20 KB) + LuCI (`luci` + `luci-theme-bootstrap`, ~0.5 MB) + optional
+`luci-app-p910nd` − lands around **~5.5–6.5 MB installed**, leaving **~1.5–2.5 MB
+headroom**. Squashfs compresses the readable rootfs further, so the on-chip
+number is typically smaller. **Build spec: do not minimize the package set.
+Ship the full in-scope feature set (LuCI admin UI + USB print + WiFi client +
+SSH, nothing more per ticket #5's final set).**
+
+Build-time caveats carried forward: this repo is current mainline snapshot (not
+23.05/24.10), so lock the release version and re-verify kmod availability
+(24.10.0 ath79 indexes publish no kmods); the WR703N is only defined in the
+`ath79/tiny` subtarget (can't move to `generic`); re-confirm ticket #2's two
+resized-layout edits so the 8000k headroom is real, not the stock 3904k.
+
 ## Question the ticket resolved
 
 > Which combination of USB printer support, print queue/server protocol, and
@@ -197,34 +232,3 @@ implementation-ready spec, not the firmware build). Build-phase edits:
 `target/linux/ath79/image/tiny-tp-link.mk` (`DEVICE_PACKAGES`), plus a config
 overlay (`/etc/config/p910nd`) — exact mechanism to be specified by the build
 ticket.
-
-## Re-audit (post-#5, AirPrint dropped) — stack confirmed, no need to go lean
-
-Re-audited after **Determine feasible iPhone AirPrint support** (issue #5)
-resolved via PR #10 confirming **AirPrint is ruled out** (needs on-router
-rasterization − CUPS + ghostscript + brlaser + avahi/dbus − none packaged for
-`mips_24kc`, >100 MB external storage, exceeds 64 MB RAM/8 MB flash).
-
-**The stack decision above is unchanged and was never dependent on the AirPrint
-question.** It rests on the DCP-1510 being host-based (GDI): the client driver
-emits the whole PDL, so the router is a dumb pipe (usblp + p910nd raw 9100,
-bidirectional). Dropping AirPrint removes the *only* reason this map ever
-favored keeping the router-side footprint minimal (headroom for a future
-rasterizer) — that reason is gone.
-
-**Feasibility of a full (non-lean) build: yes, fits in 8 MB with margin.**
-The 8 mlzma layout (ticket #2) exposes a ~8000 KB firmware region
-(0x20000–0x7f0000). The full in-scope set − kernel + base + SSH + WiFi client
-(wpad-basic-mbedtls) + kmod-usb-chipidea2 (USB host) + kmod-usb-printer +
-p910nd (~20 KB) + LuCI (`luci` + `luci-theme-bootstrap`, ~0.5 MB) + optional
-`luci-app-p910nd` − lands around **~5.5–6.5 MB installed**, leaving **~1.5–2.5 MB
-headroom**. Squashfs compresses the readable rootfs further, so the on-chip
-number is typically smaller. **Build spec: do not minimize the package set.
-Ship the full in-scope feature set (LuCI admin UI + USB print + WiFi client +
-SSH, nothing more per ticket #5's final set).**
-
-Build-time caveats carried forward: this repo is current mainline snapshot (not
-23.05/24.10), so lock the release version and re-verify kmod availability
-(24.10.0 ath79 indexes publish no kmods); the WR703N is only defined in the
-`ath79/tiny` subtarget (can't move to `generic`); re-confirm ticket #2's two
-resized-layout edits so the 8000k headroom is real, not the stock 3904k.
