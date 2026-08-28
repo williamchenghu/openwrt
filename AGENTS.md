@@ -33,6 +33,9 @@ apply to every agent session and human edit.
   the ticket is **not closed**, it is *pending merge*.
 - Never narrate a ticket as closed, completed, or resolved while its PR is
   open.
+- To make the pending state visible, tag the ticket
+  `wayfinder:pending-merge` while its linking PR is open. It stops being
+  pending (label removed) and may be closed only after the PR merges.
 
 ### Commit-and-push every completed request
 
