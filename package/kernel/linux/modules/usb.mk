@@ -1794,13 +1794,13 @@ $(eval $(call KernelPackage,usbip-server))
 
 define KernelPackage/usb-chipidea
   TITLE:=Host and device support for Chipidea controllers
-  DEPENDS:=+USB_GADGET_SUPPORT:kmod-usb-gadget @TARGET_ath79 +kmod-usb-ehci +kmod-usb-phy-nop +kmod-usb-roles +kmod-phy-ath79-usb
+  DEPENDS:=+USB_GADGET_SUPPORT:kmod-usb-gadget @TARGET_ath79 +kmod-usb-ehci +kmod-usb-phy-nop +kmod-phy-ath79-usb
   KCONFIG:= \
 	CONFIG_EXTCON \
 	CONFIG_USB_CHIPIDEA \
 	CONFIG_USB_CHIPIDEA_GENERIC \
 	CONFIG_USB_CHIPIDEA_HOST=y \
-	CONFIG_USB_CHIPIDEA_UDC=n \
+	CONFIG_USB_CHIPIDEA_UDC=y \
 	CONFIG_USB_CHIPIDEA_DEBUG=y
   FILES:= \
 	$(LINUX_DIR)/drivers/extcon/extcon-core.ko \
@@ -1824,7 +1824,7 @@ define KernelPackage/usb-chipidea2
 	CONFIG_EXTCON \
 	CONFIG_USB_CHIPIDEA \
 	CONFIG_USB_CHIPIDEA_HOST=y \
-	CONFIG_USB_CHIPIDEA_UDC=n \
+	CONFIG_USB_CHIPIDEA_UDC=y \
 	CONFIG_USB_CHIPIDEA_DEBUG=y
   FILES:= \
 	$(LINUX_DIR)/drivers/extcon/extcon-core.ko \
