@@ -91,9 +91,21 @@ sync_source() {
 
 feeds_and_config() {
   sync_source
+  # Kernel patches from build/patches/ are applied into the tree (idempotent:
+  # patch -N skips already-applied hunks).
+  if [ -d "$REPO_ROOT/build/patches" ] && ls "$REPO_ROOT"/build/patches/*.patch >/dev/null 2>&1; then
+    run_in_ctr '
+      for p in '"$REPO_SRC"'/build/patches/*.patch; do
+        patch -p1 -N -r - <$p >/dev/null 2>&1 || true
+      done
+    '
+    echo ">> Kernel patches from build/patches/ applied."
+  fi
   run_in_ctr '
     # Copy the committed config delta and apply it over a clean baseline.
-    cp '"$REPO_SRC"'/build/openwrt.config /tmp/openwrt.config
+    # Strip trailing comments (openwrt.config is annotated for humans; Kconfig
+    # treats " # comment" as part of the value and silently drops the line).
+    sed "s/ *#.*$//" '"$REPO_SRC"'/build/openwrt.config > /tmp/openwrt.config
     ./scripts/feeds update -a >/dev/null
     ./scripts/feeds install -a
     make defconfig

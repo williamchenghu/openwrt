@@ -1,0 +1,48 @@
+--- a/drivers/usb/chipidea/ci_hdrc_usb2.c
++++ b/drivers/usb/chipidea/ci_hdrc_usb2.c
+@@ -10,6 +10,7 @@
+ #include <linux/module.h>
+ #include <linux/of.h>
+ #include <linux/phy/phy.h>
++#include <linux/reset.h>
+ #include <linux/platform_device.h>
+ #include <linux/property.h>
+ #include <linux/usb/chipidea.h>
+@@ -30,6 +31,7 @@ struct ci_hdrc_usb2_priv {
+ 	struct platform_device	*ci_pdev;
+ 	struct clk		*clk;
++	struct reset_control	*rst;
+ };
+ 
+ static const struct ci_hdrc_platform_data ci_default_pdata = {
+@@ -70,6 +72,17 @@ static int ci_hdrc_usb2_probe(struct platform_device *pdev)
+ 	priv->clk = devm_clk_get_optional(dev, NULL);
+ 	if (IS_ERR(priv->clk))
+ 		return PTR_ERR(priv->clk);
+ 
++	/* Deassert the USB controller reset if present in DT.
++	 * On ath79 (AR9331 etc.), the USB controller is held in reset
++	 * by the reset controller at boot. Some bootloaders deassert
++	 * this reset before booting the kernel, but others (e.g. Breed)
++	 * do not. Without deasserting, all controller registers read 0,
++	 * causing ci_hdrc_host_init() to fail with -ENXIO.
++	 */
++	priv->rst = devm_reset_control_get_optional_exclusive(dev, NULL);
++	if (IS_ERR(priv->rst))
++		return PTR_ERR(priv->rst);
++
++	ret = reset_control_deassert(priv->rst);
++	if (ret)
++		return ret;
++
+ 	ret = clk_prepare_enable(priv->clk);
+ 	if (ret) {
+ 		dev_err(dev, "failed to enable the clock: %d\n", ret);
+@@ -117,6 +130,7 @@ static void ci_hdrc_usb2_remove(struct platform_device *pdev)
+ 	struct ci_hdrc_usb2_priv *priv = platform_get_drvdata(pdev);
+ 
+ 	pm_runtime_disable(&pdev->dev);
+ 	ci_hdrc_remove_device(priv->ci_pdev);
++	reset_control_assert(priv->rst);
+ 	clk_disable_unprepare(priv->clk);
+ }
