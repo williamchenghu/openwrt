@@ -1,0 +1,120 @@
+# Build the WR703N print-gateway OpenWrt image on GitHub Actions and publish
+# the resulting firmware images to GitHub Releases.
+#
+# Design notes (see issue #24 / #25):
+# - ubuntu-latest runners have only ~14 GB of free disk; a full OpenWrt build
+#   needs 25+ GB, so preinstalled dotnet/android/ghc/CodeQL toolchains are
+#   removed first.
+# - checkout MUST use fetch-depth: 0: scripts/getver.sh derives the base-files
+#   version from git metadata, and a shallow clone yields "~unknown", which
+#   apk rejects ("package version is invalid") — see local build.sh and
+#   commit b90f29576a.
+# - The toolchain (staging_dir/toolchain-*) and downloaded sources (dl/) are
+#   cached; a warm cache turns a 2-4h first build into a 30-60min rebuild.
+# - Build steps mirror build/build.sh: feeds update/install, apply the
+#   committed config delta (build/openwrt.config, comment-stripped), then
+#   apply kernel patches from build/patches/ idempotently with `patch -N`.
+
+name: WR703N firmware build
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "target/linux/ath79/**"
+      - "build/**"
+      - ".github/workflows/wr703n-firmware.yml"
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wr703n-firmware-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FORCE_UNSAFE_CONFIGURE: "1"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+
+    steps:
+      - name: Free disk space (runner image has ~14 GB; build needs 25+ GB)
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+            /opt/hostedtoolcache/CodeQL /usr/local/.ghcup || true
+          docker image prune -af || true
+
+      - name: Checkout (full history; getver.sh needs git metadata)
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Install build dependencies (mirrors build/Dockerfile.openwrt)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential clang flex bison gawk gcc-multilib g++-multilib \
+            gettext git libncurses-dev libssl-dev libelf-dev python3 \
+            python3-setuptools python3-venv rsync subversion swig unzip \
+            uuid-runtime wget curl file zlib1g-dev ca-certificates
+
+      - name: Cache toolchain and downloads
+        uses: actions/cache@v4
+        with:
+          path: |
+            staging_dir/toolchain-*
+            dl/
+          key: wr703n-toolchain-${{ runner.os }}-${{ hashFiles('build/openwrt.config') }}
+          restore-keys: |
+            wr703n-toolchain-${{ runner.os }}-
+
+      - name: Feeds, config, patches
+        run: |
+          # Strip trailing comments: openwrt.config is annotated for humans,
+          # but Kconfig would treat " # comment" as part of the value.
+          sed "s/ *#.*$//" build/openwrt.config > /tmp/openwrt.config
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+          make defconfig
+          # Merge our deltas last so they win, then normalize.
+          { cat .config; \
+            grep -v "^#" /tmp/openwrt.config | grep -v "^[[:space:]]*$"; } > .config.new
+          mv .config.new .config
+          make defconfig >/dev/null
+          # Kernel patches (USB fix) — idempotent: patch -N skips applied hunks.
+          for p in build/patches/*.patch; do
+            [ -e "$p" ] || continue
+            patch -p1 -N -r - < "$p" || true
+          done
+
+      - name: Build
+        run: |
+          make -j"$(nproc)"
+
+      - name: Collect firmware images
+        id: artifacts
+        run: |
+          mkdir -p artifacts
+          find bin/targets/ath79/tiny -type f \
+            \( -name "*-squashfs-factory.bin" -o -name "*-squashfs-sysupgrade.bin" \) \
+            -exec cp {} artifacts/ \;
+          ls -l artifacts/
+          echo "tag_name=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Release (prerelease on main pushes, official on v* tags)
+        uses: softprops/action-gh-release@v2
+        with:
+          # A single rolling prerelease tag for main-branch builds; v* tag
+          # pushes create their own real release instead.
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || 'nightly' }}
+          name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || 'WR703N nightly build' }}
+          prerelease: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+          files: artifacts/*
+          fail_on_unmatched_files: true
