@@ -1,3 +1,13 @@
+# OpenWrt — WR703N print-gateway fork
+
+> **Building firmware for the TL-WR703N print gateway? Start here:**
+>
+> * **`build/REBUILD.md`** — the full, verified procedure to build and flash the
+>   WR703N print-gateway firmware (one command: `./build/build.sh`)
+> * **`build/README.md`** — quick reference for the Docker build setup
+>
+> Everything below is the upstream OpenWrt readme, kept for reference.
+
 ![OpenWrt logo](include/logo.png)
 
 OpenWrt Project is a Linux operating system targeting embedded devices. Instead
