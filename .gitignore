@@ -35,3 +35,6 @@ git-src
 .cproject
 .ccache
 .vscode*
+
+# Docker build output (firmware artifacts copied out of the build volume)
+/bin-docker/

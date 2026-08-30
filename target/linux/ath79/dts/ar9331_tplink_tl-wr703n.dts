@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later OR MIT
 
-#include "ar9331_tplink_tl-wr703n_tl-mr10u.dtsi"
+#include "ar9331_tplink_tl-wr703n-8m.dtsi"
 
 / {
 	model = "TP-Link TL-WR703N";
