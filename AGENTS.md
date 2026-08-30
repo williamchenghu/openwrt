@@ -16,6 +16,14 @@ This file gives Freebuff context about your project: goals, commands, convention
 These rules govern every change in this repository. They are non-negotiable and
 apply to every agent session and human edit.
 
+### Language rule — English or Chinese only
+
+- Every reply to the user must be written in **English or Chinese** — never in
+  any other language. German (or any third language) is strictly forbidden in
+  conversation replies.
+- This rule also applies to commit messages, PR titles/bodies, and issue
+  comments that are addressed to the user.
+
 ### Always feature branch + PR — never commit/push to `main`
 
 - Every change goes on a dedicated **feature branch** and lands via a **pull
