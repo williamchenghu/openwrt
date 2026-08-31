@@ -11,9 +11,10 @@
 #   commit b90f29576a.
 # - The toolchain (staging_dir/toolchain-*) and downloaded sources (dl/) are
 #   cached; a warm cache turns a 2-4h first build into a 30-60min rebuild.
-# - Build steps mirror build/build.sh: feeds update/install, apply the
-#   committed config delta (build/openwrt.config, comment-stripped), then
-#   apply kernel patches from build/patches/ idempotently with `patch -N`.
+# - The USB kernel fix lives in target/linux/ath79/patches-6.18/ and is
+#   applied automatically by the OpenWrt kernel build system during `make`
+#   (a manual `patch` from the repo root cannot work: the kernel sources are
+#   only unpacked during the build).
 
 name: WR703N firmware build
 
@@ -88,11 +89,9 @@ jobs:
             grep -v "^#" /tmp/openwrt.config | grep -v "^[[:space:]]*$"; } > .config.new
           mv .config.new .config
           make defconfig >/dev/null
-          # Kernel patches (USB fix) — idempotent: patch -N skips applied hunks.
-          for p in build/patches/*.patch; do
-            [ -e "$p" ] || continue
-            patch -p1 -N -r - < "$p" || true
-          done
+          # NOTE: the USB kernel fix (705-usb-chipidea2-add-reset-handling.patch)
+          # is applied by the OpenWrt kernel build system from
+          # target/linux/ath79/patches-6.18/ during `make` — no manual patch here.
 
       - name: Build
         run: |
