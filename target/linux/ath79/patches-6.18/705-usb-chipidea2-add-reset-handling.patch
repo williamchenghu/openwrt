@@ -16,7 +16,7 @@
  };
  
  static const struct ci_hdrc_platform_data ci_default_pdata = {
-@@ -74,6 +76,21 @@
+@@ -74,6 +76,21 @@ static int ci_hdrc_usb2_probe(struct pla
  	if (IS_ERR(priv->clk))
  		return PTR_ERR(priv->clk);
  
@@ -38,7 +38,7 @@
  	ret = clk_prepare_enable(priv->clk);
  	if (ret) {
  		dev_err(dev, "failed to enable the clock: %d\n", ret);
-@@ -111,6 +128,7 @@
+@@ -111,6 +128,7 @@ static void ci_hdrc_usb2_remove(struct p
  
  	pm_runtime_disable(&pdev->dev);
  	ci_hdrc_remove_device(priv->ci_pdev);
